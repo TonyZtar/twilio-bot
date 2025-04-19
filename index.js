@@ -13,45 +13,47 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// Para llevar control de números nuevos (solo en memoria, opcional para producción usar Supabase)
+// Control de usuarios saludados (en memoria)
 const usuariosSaludados = new Set();
 
 app.post('/webhook', async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
-  const msg = req.body.Body?.trim();
-  const numero = req.body.From; // Formato: whatsapp:+52166xxxxxx
+  const numero = req.body.From;
+  const msg = req.body.Body?.trim().toUpperCase(); // Limpiamos y pasamos a mayúsculas
 
-  // 1️⃣ Bienvenida inicial solo una vez por usuario
+  console.log(`📥 Mensaje recibido de ${numero}: "${msg}"`);
+
+  // 1️⃣ Bienvenida inicial
   if (!usuariosSaludados.has(numero)) {
     usuariosSaludados.add(numero);
     twiml.message('👋 Bienvenido.\n\nIngrese Kanban o Número de parte.');
     return res.type('text/xml').send(twiml.toString());
   }
 
-  // 2️⃣ Validar mensaje vacío
+  // 2️⃣ Validación de mensaje vacío
   if (!msg) {
     twiml.message('Por favor, ingrese un Kanban o número de parte.');
     return res.type('text/xml').send(twiml.toString());
   }
 
-  // 3️⃣ Buscar primero por KANBAN
+  // 3️⃣ Buscar por KANBAN (sin distinción de mayúsculas)
   let { data, error } = await supabase
     .from('DivisionP04')
     .select('*')
-    .eq('KANBAN', msg);
+    .ilike('KANBAN', msg);
 
-  // 4️⃣ Si no encontró por KANBAN, buscar por número de parte
+  // 4️⃣ Si no hay resultado, buscar por Part
   if (!data || data.length === 0) {
     const result = await supabase
       .from('DivisionP04')
       .select('*')
-      .eq('Part', msg);
+      .ilike('Part', msg);
 
     data = result.data;
     error = result.error;
   }
 
-  // 5️⃣ Respuesta según resultados
+  // 5️⃣ Responder según resultado
   if (error) {
     console.error('❌ Error al consultar Supabase:', error);
     twiml.message('Hubo un error al buscar el material. Intenta más tarde.');
@@ -81,5 +83,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor escuchando en puerto ${PORT}`);
 });
-
-// Última modificación: corrección tabla DivisionP04
