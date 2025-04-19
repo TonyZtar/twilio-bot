@@ -14,14 +14,12 @@ app.post('/webhook', async (req, res) => {
 
   console.log(`📥 Mensaje recibido de ${numero}: "${msg}"`);
 
-  // Si escriben "HOLA"
   if (msg && msg.toLowerCase() === 'hola') {
     console.log('👋 Enviando mensaje de bienvenida');
     twiml.message('👋 Bienvenido.\n\nIngrese Kanban o Número de parte.');
     return res.type('text/xml').send(twiml.toString());
   }
 
-  // Buscar en Firestore
   try {
     console.log('🔍 Buscando por KANBAN...');
     const snapshot = await db.collection('materiales')
@@ -37,23 +35,25 @@ app.post('/webhook', async (req, res) => {
       if (partSnap.empty) {
         console.log('❌ No encontrado por Part tampoco.');
         twiml.message('Información incorrecta.');
+        return res.type('text/xml').send(twiml.toString());
       } else {
         const doc = partSnap.docs[0].data();
         console.log('✅ Encontrado por Part:', doc);
         twiml.message(formatearRespuesta(doc));
+        return res.type('text/xml').send(twiml.toString());
       }
     } else {
       const doc = snapshot.docs[0].data();
       console.log('✅ Encontrado por KANBAN:', doc);
       twiml.message(formatearRespuesta(doc));
+      return res.type('text/xml').send(twiml.toString());
     }
 
   } catch (error) {
     console.error('❌ Error al consultar Firestore:', error);
     twiml.message('Hubo un error al buscar el material. Intenta más tarde.');
+    return res.type('text/xml').send(twiml.toString());
   }
-
-  res.type('text/xml').send(twiml.toString());
 });
 
 function formatearRespuesta(row) {
