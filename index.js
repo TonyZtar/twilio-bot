@@ -39,13 +39,17 @@ app.post('/webhook', async (req, res) => {
       } else {
         const doc = partSnap.docs[0].data();
         console.log('✅ Encontrado por Part:', doc);
-        twiml.message(formatearRespuesta(doc));
+        const mensaje = formatearRespuesta(doc);
+        console.log('📤 Respuesta enviada:', mensaje);
+        twiml.message(mensaje);
         return res.type('text/xml').send(twiml.toString());
       }
     } else {
       const doc = snapshot.docs[0].data();
       console.log('✅ Encontrado por KANBAN:', doc);
-      twiml.message(formatearRespuesta(doc));
+      const mensaje = formatearRespuesta(doc);
+      console.log('📤 Respuesta enviada:', mensaje);
+      twiml.message(mensaje);
       return res.type('text/xml').send(twiml.toString());
     }
 
@@ -58,17 +62,17 @@ app.post('/webhook', async (req, res) => {
 
 function formatearRespuesta(row) {
   return (
-    `📦 *Resultado:*\n\n` +
-    `🔹 *KANBAN:* ${row.KANBAN}\n` +
-    `🔹 *Parte:* ${row.Part}\n` +
-    `🔹 *Proveedor:* ${row.Supplier}\n` +
-    `🔹 *Nombre Proveedor:* ${row.SupplierName}\n` +
-    `🔹 *Nombre Parte:* ${row.PartName}\n` +
-    `🔹 *DOCK:* ${row.DOCK}\n` +
-    `🔹 *Analista:* ${row.Analyst}\n` +
-    `🔹 *SubRuta:* ${row.SubRoute}\n` +
-    `🔹 *Ruta Principal:* ${row.MainRoute}\n` +
-    `🔹 *Uso:* ${row.Usage}`
+    "📦 Resultado:\n\n" +
+    "KANBAN: " + row.KANBAN + "\n" +
+    "Parte: " + row.Part + "\n" +
+    "Proveedor: " + row.Supplier + "\n" +
+    "Nombre Proveedor: " + row.SupplierName + "\n" +
+    "Nombre Parte: " + row.PartName + "\n" +
+    "DOCK: " + row.DOCK + "\n" +
+    "Analista: " + row.Analyst + "\n" +
+    "SubRuta: " + row.SubRoute + "\n" +
+    "Ruta Principal: " + row.MainRoute + "\n" +
+    "Uso: " + row.Usage
   );
 }
 
