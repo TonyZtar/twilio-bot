@@ -1,62 +1,46 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const twilio = require('twilio');
-const db = require('./firebase'); // 🔗 conexión a Firestore
+const db = require('./firebase');
 
 dotenv.config();
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
-const usuariosSaludados = new Set();
-
 app.post('/webhook', async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
+  const msg = req.body.Body?.trim();
   const numero = req.body.From;
-  const msg = req.body.Body?.replace(/\s/g, '').toUpperCase();
 
   console.log(`📥 Mensaje recibido de ${numero}: "${msg}"`);
 
-  // Bienvenida
-  if (!usuariosSaludados.has(numero)) {
-    usuariosSaludados.add(numero);
+  // Si escriben "HOLA"
+  if (msg && msg.toLowerCase() === 'hola') {
+    console.log('👋 Enviando mensaje de bienvenida');
     twiml.message('👋 Bienvenido.\n\nIngrese Kanban o Número de parte.');
     return res.type('text/xml').send(twiml.toString());
   }
 
-  // Validación vacía
-  if (!msg) {
-    twiml.message('Por favor, ingrese un Kanban o número de parte.');
-    return res.type('text/xml').send(twiml.toString());
-  }
-
+  // Buscar en Firestore
   try {
-    const snapshot = await db.collection('materiales').get();
-    const materiales = [];
+    const snapshot = await db.collection('materiales')
+      .where('KANBAN', '==', msg)
+      .get();
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.KANBAN?.toUpperCase() === msg || data.Part?.toUpperCase() === msg) {
-        materiales.push(data);
+    if (snapshot.empty) {
+      const partSnap = await db.collection('materiales')
+        .where('Part', '==', msg)
+        .get();
+
+      if (partSnap.empty) {
+        twiml.message('Información incorrecta.');
+      } else {
+        const doc = partSnap.docs[0].data();
+        twiml.message(formatearRespuesta(doc));
       }
-    });
-
-    if (materiales.length === 0) {
-      twiml.message('Información incorrecta.');
     } else {
-      const mat = materiales[0];
-      twiml.message(
-        `📦 *Resultado:*\n\n` +
-        `🔹 *KANBAN:* ${mat.KANBAN}\n` +
-        `🔹 *Parte:* ${mat.Part}\n` +
-        `🔹 *Proveedor:* ${mat.Supplier}\n` +
-        `🔹 *Nombre Proveedor:* ${mat.SupplierName}\n` +
-        `🔹 *Nombre Parte:* ${mat.PartName}\n` +
-        `🔹 *DOCK:* ${mat.DOCK}\n` +
-        `🔹 *Analista:* ${mat.Analyst}\n` +
-        `🔹 *SubRuta:* ${mat.SubRoute}\n` +
-        `🔹 *Ruta Principal:* ${mat.MainRoute}\n` +
-        `🔹 *Uso:* ${mat.Usage}`
-      );
+      const doc = snapshot.docs[0].data();
+      twiml.message(formatearRespuesta(doc));
     }
 
   } catch (error) {
@@ -66,6 +50,22 @@ app.post('/webhook', async (req, res) => {
 
   res.type('text/xml').send(twiml.toString());
 });
+
+function formatearRespuesta(row) {
+  return (
+    `📦 *Resultado:*\n\n` +
+    `🔹 *KANBAN:* ${row.KANBAN}\n` +
+    `🔹 *Parte:* ${row.Part}\n` +
+    `🔹 *Proveedor:* ${row.Supplier}\n` +
+    `🔹 *Nombre Proveedor:* ${row.SupplierName}\n` +
+    `🔹 *Nombre Parte:* ${row.PartName}\n` +
+    `🔹 *DOCK:* ${row.DOCK}\n` +
+    `🔹 *Analista:* ${row.Analyst}\n` +
+    `🔹 *SubRuta:* ${row.SubRoute}\n` +
+    `🔹 *Ruta Principal:* ${row.MainRoute}\n` +
+    `🔹 *Uso:* ${row.Usage}`
+  );
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
