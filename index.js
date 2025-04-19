@@ -23,23 +23,28 @@ app.post('/webhook', async (req, res) => {
 
   // Buscar en Firestore
   try {
+    console.log('🔍 Buscando por KANBAN...');
     const snapshot = await db.collection('materiales')
       .where('KANBAN', '==', msg)
       .get();
 
     if (snapshot.empty) {
+      console.log('❌ No encontrado por KANBAN. Buscando por Part...');
       const partSnap = await db.collection('materiales')
         .where('Part', '==', msg)
         .get();
 
       if (partSnap.empty) {
+        console.log('❌ No encontrado por Part tampoco.');
         twiml.message('Información incorrecta.');
       } else {
         const doc = partSnap.docs[0].data();
+        console.log('✅ Encontrado por Part:', doc);
         twiml.message(formatearRespuesta(doc));
       }
     } else {
       const doc = snapshot.docs[0].data();
+      console.log('✅ Encontrado por KANBAN:', doc);
       twiml.message(formatearRespuesta(doc));
     }
 
