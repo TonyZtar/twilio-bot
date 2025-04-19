@@ -4,6 +4,10 @@ const twilio = require('twilio');
 const { createClient } = require('@supabase/supabase-js');
 
 dotenv.config();
+
+console.log('🔐 SUPABASE_URL:', process.env.SUPABASE_URL);
+console.log('🔐 SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY?.slice(0, 20) + '...');
+
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
