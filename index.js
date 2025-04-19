@@ -59,30 +59,20 @@ app.post('/webhook', async (req, res) => {
 });
 
 function formatearRespuesta(row) {
-  return (
-    "*RESULT:*
+  return `
+*RESULT:*
 
-" +
-    "*KANBAN:* _" + row.KANBAN + "_
-" +
-    "*Part:* _" + row.Part + "_
-" +
-    "*Supplier:* _" + row.Supplier + "_
-" +
-    "*Supplier Name:* _" + row.SupplierName + "_
-" +
-    "*Part Name:* _" + row.PartName + "_
-" +
-    "*DOCK:* _" + row.DOCK + "_
-" +
-    "*Analyst:* _" + row.Analyst + "_
-" +
-    "*SubRoute:* _" + row.SubRoute + "_
-" +
-    "*Main Route:* _" + row.MainRoute + "_
-" +
-    "*Usage:* _" + row.Usage + "_"
-  );
+*KANBAN:* _${row.KANBAN}_
+*Part:* _${row.Part}_
+*Supplier:* _${row.Supplier}_
+*Supplier Name:* _${row.SupplierName}_
+*Part Name:* _${row.PartName}_
+*DOCK:* _${row.DOCK}_
+*Analyst:* _${row.Analyst}_
+*SubRoute:* _${row.SubRoute}_
+*Main Route:* _${row.MainRoute}_
+*Usage:* _${row.Usage}_
+  `.trim();
 }
 
 const PORT = process.env.PORT || 3000;
