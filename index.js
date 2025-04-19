@@ -23,13 +23,6 @@ app.post('/webhook', async (req, res) => {
 
   console.log(`📥 Mensaje recibido de ${numero}: "${msg}"`);
 
-  // 🔍 Depuración: Verificar si Supabase devuelve coincidencia por KANBAN
-  const test = await supabase
-    .from('DivisionP04')
-    .select('KANBAN, Part')
-    .ilike('KANBAN', msg);
-  console.log('🔎 Resultado búsqueda directa por KANBAN:', test.data);
-
   // 1️⃣ Bienvenida inicial
   if (!usuariosSaludados.has(numero)) {
     usuariosSaludados.add(numero);
@@ -43,28 +36,19 @@ app.post('/webhook', async (req, res) => {
     return res.type('text/xml').send(twiml.toString());
   }
 
-  // 3️⃣ Buscar por KANBAN
-  let { data, error } = await supabase
+  // 3️⃣ Búsqueda por KANBAN o PART en una sola consulta
+  const { data, error } = await supabase
     .from('DivisionP04')
     .select('*')
-    .ilike('KANBAN', msg);
+    .or(`KANBAN.ilike.${msg},Part.ilike.${msg}`);
 
-  // 4️⃣ Si no hay resultado, buscar por Part
-  if (!data || data.length === 0) {
-    const result = await supabase
-      .from('DivisionP04')
-      .select('*')
-      .ilike('Part', msg);
+  console.log('🔍 Resultado de búsqueda combinada:', data);
 
-    data = result.data;
-    error = result.error;
-  }
-
-  // 5️⃣ Responder según resultado
+  // 4️⃣ Responder según resultado
   if (error) {
     console.error('❌ Error al consultar Supabase:', error);
     twiml.message('Hubo un error al buscar el material. Intenta más tarde.');
-  } else if (data.length === 0) {
+  } else if (!data || data.length === 0) {
     twiml.message('Información incorrecta.');
   } else {
     const row = data[0];
