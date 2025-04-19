@@ -36,14 +36,14 @@ app.post('/webhook', async (req, res) => {
 
   // 3️⃣ Buscar primero por KANBAN
   let { data, error } = await supabase
-    .from('Division')
+    .from('DivisionP04')
     .select('*')
     .eq('KANBAN', msg);
 
   // 4️⃣ Si no encontró por KANBAN, buscar por número de parte
   if (!data || data.length === 0) {
     const result = await supabase
-      .from('Division')
+      .from('DivisionP04')
       .select('*')
       .eq('Part', msg);
 
@@ -81,3 +81,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor escuchando en puerto ${PORT}`);
 });
+
+// Última modificación: corrección tabla DivisionP04
