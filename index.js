@@ -15,8 +15,8 @@ app.post('/webhook', async (req, res) => {
   console.log(`📥 Mensaje recibido de ${numero}: "${msg}"`);
 
   if (msg && msg.toLowerCase() === 'hola') {
-    console.log('👋 Enviando mensaje de bienvenida');
-    twiml.message('👋 Bienvenido.\n\nIngrese Kanban o Número de parte.');
+    console.log('📤 Enviando mensaje de bienvenida');
+    twiml.message('Welcome. Please enter a Kanban or Part Number.');
     return res.type('text/xml').send(twiml.toString());
   }
 
@@ -34,11 +34,10 @@ app.post('/webhook', async (req, res) => {
 
       if (partSnap.empty) {
         console.log('❌ No encontrado por Part tampoco.');
-        twiml.message('Información incorrecta.');
+        twiml.message('Incorrect information.');
         return res.type('text/xml').send(twiml.toString());
       } else {
         const doc = partSnap.docs[0].data();
-        console.log('✅ Encontrado por Part:', doc);
         const mensaje = formatearRespuesta(doc);
         console.log('📤 Respuesta enviada:', mensaje);
         twiml.message(mensaje);
@@ -46,7 +45,6 @@ app.post('/webhook', async (req, res) => {
       }
     } else {
       const doc = snapshot.docs[0].data();
-      console.log('✅ Encontrado por KANBAN:', doc);
       const mensaje = formatearRespuesta(doc);
       console.log('📤 Respuesta enviada:', mensaje);
       twiml.message(mensaje);
@@ -55,28 +53,39 @@ app.post('/webhook', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error al consultar Firestore:', error);
-    twiml.message('Hubo un error al buscar el material. Intenta más tarde.');
+    twiml.message('An error occurred while retrieving the material. Please try again later.');
     return res.type('text/xml').send(twiml.toString());
   }
 });
 
 function formatearRespuesta(row) {
   return (
-    "📦 Resultado:\n\n" +
-    "KANBAN: " + row.KANBAN + "\n" +
-    "Parte: " + row.Part + "\n" +
-    "Proveedor: " + row.Supplier + "\n" +
-    "Nombre Proveedor: " + row.SupplierName + "\n" +
-    "Nombre Parte: " + row.PartName + "\n" +
-    "DOCK: " + row.DOCK + "\n" +
-    "Analista: " + row.Analyst + "\n" +
-    "SubRuta: " + row.SubRoute + "\n" +
-    "Ruta Principal: " + row.MainRoute + "\n" +
-    "Uso: " + row.Usage
+    "*RESULT:*
+
+" +
+    "*KANBAN:* _" + row.KANBAN + "_
+" +
+    "*Part:* _" + row.Part + "_
+" +
+    "*Supplier:* _" + row.Supplier + "_
+" +
+    "*Supplier Name:* _" + row.SupplierName + "_
+" +
+    "*Part Name:* _" + row.PartName + "_
+" +
+    "*DOCK:* _" + row.DOCK + "_
+" +
+    "*Analyst:* _" + row.Analyst + "_
+" +
+    "*SubRoute:* _" + row.SubRoute + "_
+" +
+    "*Main Route:* _" + row.MainRoute + "_
+" +
+    "*Usage:* _" + row.Usage + "_"
   );
 }
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en puerto ${PORT}`);
+  console.log(`Servidor escuchando en puerto ${PORT}`);
 });
