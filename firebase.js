@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-key.json');
+const serviceAccount = require('/etc/secrets/firebase-key.json'); // <- muy importante
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -10,3 +10,4 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 module.exports = db;
+
